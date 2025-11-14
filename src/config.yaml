@@ -1,0 +1,3 @@
+plugins-path: ./plugins/
+PAG_PAUSE: 0.5
+PAG_FAILSAFE: true
