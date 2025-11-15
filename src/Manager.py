@@ -51,9 +51,15 @@ class Manager:
 
                 try:
                     data = json.loads(plugin_config.read_text(encoding="utf-8"))
-                    plugins[data["classname"]] = self._load_class_from_path(
-                        plugin_module, data["classname"]
-                    )
+                    plugins[data["classname"]] = {
+                        "name": data["name"],
+                        "version": data["version"],
+                        "description": data["description"],
+                        "classname": data["classname"],
+                        "class": self._load_class_from_path(
+                            plugin_module, data["classname"]
+                        ),
+                    }
                     self.logger.info(f"已加载插件: {data['name']} ")
 
                 except json.JSONDecodeError as e:

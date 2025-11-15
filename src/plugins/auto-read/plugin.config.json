@@ -1,17 +1,13 @@
 {
     "name": "Auto Read",
-    "version": "1.2.1",
-    "description": "自动阅读插件",
+    "version": "2.0.0",
+    "description": "基于OCR识别的自动阅读插件. (author@Churk lisence@MIT) ",
     "classname": "AutoReadPlugin",
     "config": {
-        "check_interval": 20,
+        "check_interval": 5,
         "scroll_amount": -500,
         "max_runtime": 9000,
-        "threshold": 0.8
+        "threshold": 0.6
     },
-    "templates": {
-        "next_btn": "templates/next_btn.png",
-        "prev_btn": "templates/prev_btn.png",
-        "more_btn": "templates/more_btn.png"
-    }
+    "templates": {}
 }
