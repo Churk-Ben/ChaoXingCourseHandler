@@ -1,31 +1,18 @@
 import os
-import sys
 import json
-import logging
-from pathlib import Path
 import importlib.util
-
+from pathlib import Path
+from src.Base import PluginBase
+from src.utils import Logger
 
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, ".."))
-SRC_DIR = os.path.join(PROJECT_ROOT, "src")
-
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
-if SRC_DIR not in sys.path:
-    sys.path.insert(0, SRC_DIR)
-
-CONFIG = os.path.join(THIS_DIR, ".config.yaml")
 PLUGINS = os.path.join(THIS_DIR, "plugins")
-
-from Base import PluginBase
-from src.utils import Logger
 
 
 class Manager:
     def __init__(self):
         self.plugins = {}  # name: path.classname
-        self.logger = Logger.get_logger("PluginManager", level=logging.DEBUG)
+        self.logger = Logger.get_logger("PluginManager")
 
     def _load_class_from_path(self, module_path: Path, classname: str):
         path = module_path.resolve()
@@ -78,18 +65,6 @@ class Manager:
         return plugins
 
     def activate_plugin(self, plugin: PluginBase):
-        plugin_logger = Logger.get_logger(plugin.__name__, level=logging.DEBUG)
+        plugin_logger = Logger.get_logger(plugin.__name__)
         plugin_instance = plugin(logger=plugin_logger)
         plugin_instance.run()
-
-
-if __name__ == "__main__":
-    manager = Manager()
-    plugins = manager.load_plugins()
-
-    try:
-        manager.activate_plugin(plugins["AutoReadPlugin"])
-    except KeyboardInterrupt:
-        manager.logger.info("插件已被用户中断")
-    except Exception as e:
-        manager.logger.error(f"运行插件时出错: {e}")

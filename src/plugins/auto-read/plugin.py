@@ -3,8 +3,6 @@ import sys
 
 
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-CONFIG = os.path.join(THIS_DIR, "plugin.config.json")
-
 PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", "..", ".."))
 SRC_DIR = os.path.join(PROJECT_ROOT, "src")
 
@@ -14,8 +12,10 @@ if SRC_DIR not in sys.path:
     sys.path.insert(0, SRC_DIR)
 
 
-from src.utils import Image
 from src.Base import PluginBase
+from src.utils import Image
+
+CONFIG = os.path.join(THIS_DIR, "plugin.config.json")
 
 
 class AutoReadPlugin(PluginBase):
