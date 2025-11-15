@@ -2,7 +2,7 @@
     "name": "Auto Read",
     "version": "1.2.0",
     "description": "自动阅读插件",
-    "className": "AutoReadPlugin",
+    "classname": "AutoReadPlugin",
     "config": {
         "check_interval": 20,
         "scroll_amount": -500,

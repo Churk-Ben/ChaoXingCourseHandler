@@ -2,9 +2,10 @@ import os
 import sys
 
 
-PLUGIN_DIR = os.path.abspath(os.path.dirname(__file__))
-CONFIG_PATH = os.path.join(PLUGIN_DIR, "plugin.config.json")
-PROJECT_ROOT = os.path.abspath(os.path.join(PLUGIN_DIR, "..", "..", ".."))
+THIS_DIR = os.path.abspath(os.path.dirname(__file__))
+CONFIG = os.path.join(THIS_DIR, "plugin.config.json")
+
+PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", "..", ".."))
 SRC_DIR = os.path.join(PROJECT_ROOT, "src")
 
 if PROJECT_ROOT not in sys.path:
@@ -14,7 +15,7 @@ if SRC_DIR not in sys.path:
 
 
 from src.utils import Image
-from src.PluginBase import PluginBase
+from src.Base import PluginBase
 
 
 class AutoReadPlugin(PluginBase):
@@ -28,7 +29,7 @@ class AutoReadPlugin(PluginBase):
         self.load_config()
 
     def load_config(self):
-        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+        with open(CONFIG, "r", encoding="utf-8") as f:
             import json
 
             self.config = json.load(f)
@@ -38,7 +39,7 @@ class AutoReadPlugin(PluginBase):
             if self.logger is None:
                 raise ValueError("无法加载日志记录器")
 
-            self.logger.info(f"插件 {self.config['name']} 加载成功")
+            self.logger.info(f"插件 {self.config['name']} 激活成功")
             self.logger.info(f"插件版本: {self.config['version']} ")
             self.logger.info(f"插件描述: {self.config['description']} ")
 
@@ -71,13 +72,13 @@ class AutoReadPlugin(PluginBase):
         import pyautogui as pag
 
         prev_btn_img = self.load_grayscaled_template(
-            os.path.join(PLUGIN_DIR, self.config["templates"]["prev_btn"])
+            os.path.join(THIS_DIR, self.config["templates"]["prev_btn"])
         )
         next_btn_img = self.load_grayscaled_template(
-            os.path.join(PLUGIN_DIR, self.config["templates"]["next_btn"])
+            os.path.join(THIS_DIR, self.config["templates"]["next_btn"])
         )
         more_btn_img = self.load_grayscaled_template(
-            os.path.join(PLUGIN_DIR, self.config["templates"]["more_btn"])
+            os.path.join(THIS_DIR, self.config["templates"]["more_btn"])
         )
 
         prev_point = self.find_template_on_screen(prev_btn_img)
@@ -127,15 +128,17 @@ class AutoReadPlugin(PluginBase):
 
 
 if __name__ == "__main__":
-    import time
     import logging
     from src.utils import Logger
 
-    logger = Logger.get_logger("AutoReadPlugin", level=logging.DEBUG)
+    main_logger = Logger.get_logger("PluginManager", level=logging.DEBUG)
 
-    time.sleep(3)
+    def activate_plugin(plugin: PluginBase):
+        plugin_logger = Logger.get_logger(plugin.__name__, level=logging.DEBUG)
+        plugin_instance = plugin(logger=plugin_logger)
+        plugin_instance.run()
+
     try:
-        read_handler = AutoReadPlugin(logger=logger)
-        read_handler.run()
+        activate_plugin(AutoReadPlugin)
     except KeyboardInterrupt:
-        logger.info("插件已被用户中断")
+        main_logger.info("插件已被用户中断")
