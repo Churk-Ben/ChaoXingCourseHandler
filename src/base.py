@@ -18,7 +18,7 @@ class PluginBase(ABC):
         return plugin_class
 
     @staticmethod
-    def display_plugins(plugins, headers=None, tablefmt="simple"):
+    def display_plugins(plugins, headers=None):
         plugin_map = {}
         data = []
 
@@ -62,7 +62,7 @@ class PluginBase(ABC):
             tabulate(
                 processed_data,
                 headers=processed_headers,
-                maxcolwidths=[None, None, None, 80],
-                tablefmt=tablefmt,
+                # maxcolwidths=[None, None, None, 80],
+                # tablefmt="simple"
             )
         )
