@@ -1,15 +1,17 @@
 {
     "name": "Auto Read",
-    "className": "AutoReadPlugin",
-    "description": "自动阅读插件",
     "version": "1.2.0",
+    "description": "自动阅读插件",
+    "className": "AutoReadPlugin",
     "config": {
         "check_interval": 20,
         "scroll_amount": -500,
-        "max_runtime": 9000
+        "max_runtime": 9000,
+        "threshold": 0.8
     },
     "templates": {
         "next_btn": "templates/next_btn.png",
-        "prev_btn": "templates/prev_btn.png"
+        "prev_btn": "templates/prev_btn.png",
+        "more_btn": "templates/more_btn.png"
     }
 }

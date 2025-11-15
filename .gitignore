@@ -114,3 +114,5 @@ Thumbs.db
 .venv/
 .vscode/
 .trae/
+
+logs/

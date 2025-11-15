@@ -14,94 +14,128 @@ if SRC_DIR not in sys.path:
 
 
 from src.utils import Image
+from src.PluginBase import PluginBase
 
 
-class AutoReadPlugin:
+class AutoReadPlugin(PluginBase):
     """
     自动阅读插件
-    版本: 1.2.0
     """
 
-    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-        import json
+    def __init__(self, logger=None):
+        self.logger = logger
+        self.config = None
+        self.load_config()
 
-        config = json.load(f)
+    def load_config(self):
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            import json
 
-    # 载入模板图像为灰度图
-    @staticmethod
-    def load_grayscaled_template(img_path):
+            self.config = json.load(f)
+            if self.config is None:
+                raise ValueError("无法加载插件配置文件")
+
+            if self.logger is None:
+                raise ValueError("无法加载日志记录器")
+
+            self.logger.info(f"插件 {self.config['name']} 加载成功")
+            self.logger.info(f"插件版本: {self.config['version']} ")
+            self.logger.info(f"插件描述: {self.config['description']} ")
+
+    def load_grayscaled_template(self, img_path):
         img = Image.UnitImage.from_path(img_path)
         gray_img = img.to_grayscale()
+        self.logger.debug(f"加载并转换模板图像: {img_path}")
         return gray_img
 
-    # 捕获屏幕为灰度图
-    @staticmethod
-    def capture_grayscaled_screen():
+    def capture_grayscaled_screen(self):
         import pyautogui as pag
 
         screenshot = pag.screenshot()
         img = Image.UnitImage.from_pil(screenshot)
         gray_img = img.to_grayscale()
+        self.logger.debug("捕获并转换屏幕截图为灰度图像")
         return gray_img
 
-    # 在屏幕截图中查找某模板的位置
-    @staticmethod
-    def find_template_on_screen(template: Image.UnitImage, threshold=0.8):
-        screen = AutoReadPlugin.capture_grayscaled_screen()
+    def find_template_on_screen(self, template: Image.UnitImage, threshold=None):
+        if threshold is None:
+            threshold = self.config["config"]["threshold"]
+        screen = self.capture_grayscaled_screen()
         point = Image.ImageProccecor.match_template(
             screen, template, threshold=threshold, top_n=1
         )
+        self.logger.debug(f"在屏幕上查找模板, 阈值: {threshold}, 结果: {point}")
         return point
 
-    # 决策下一步
-    @staticmethod
-    def next_step():
+    def next_step(self):
         import pyautogui as pag
 
-        prev_btn_img = AutoReadPlugin.load_grayscaled_template(
-            os.path.join(PLUGIN_DIR, AutoReadPlugin.config["templates"]["prev_btn"])
+        prev_btn_img = self.load_grayscaled_template(
+            os.path.join(PLUGIN_DIR, self.config["templates"]["prev_btn"])
         )
-        next_btn_img = AutoReadPlugin.load_grayscaled_template(
-            os.path.join(PLUGIN_DIR, AutoReadPlugin.config["templates"]["next_btn"])
+        next_btn_img = self.load_grayscaled_template(
+            os.path.join(PLUGIN_DIR, self.config["templates"]["next_btn"])
+        )
+        more_btn_img = self.load_grayscaled_template(
+            os.path.join(PLUGIN_DIR, self.config["templates"]["more_btn"])
         )
 
-        prev_point = AutoReadPlugin.find_template_on_screen(prev_btn_img)
-        next_point = AutoReadPlugin.find_template_on_screen(next_btn_img)
+        prev_point = self.find_template_on_screen(prev_btn_img)
+        next_point = self.find_template_on_screen(next_btn_img)
+        more_point = self.find_template_on_screen(more_btn_img)
 
-        if next_point:
+        if more_point:
+            pag.click(
+                more_point[0] + more_btn_img.cv2.shape[1] // 2,
+                more_point[1] + more_btn_img.cv2.shape[0] // 2,
+            )
+            self.logger.info('点击了"加载更多"按钮')
+            return True
+
+        elif next_point:
             pag.click(
                 next_point[0] + next_btn_img.cv2.shape[1] // 2,
                 next_point[1] + next_btn_img.cv2.shape[0] // 2,
             )
+            self.logger.info('点击了"下一页"按钮')
             return True
+
         elif prev_point:
             pag.click(
                 prev_point[0] + prev_btn_img.cv2.shape[1] // 2,
                 prev_point[1] + prev_btn_img.cv2.shape[0] // 2,
             )
+            self.logger.info('点击了"上一页"按钮')
             return True
+
         else:
-            pag.scroll(AutoReadPlugin.config["config"]["scroll_amount"])
+            pag.scroll(self.config["config"]["scroll_amount"])
+            self.logger.info("未找到任何按钮, 执行滚动操作")
             return False
 
-    @staticmethod
-    def run():
+    def run(self):
         import time
 
-        print(AutoReadPlugin.config)
-        time.sleep(3)
-        interval = AutoReadPlugin.config["config"]["check_interval"]
+        interval = self.config["config"]["check_interval"]
         start_time = time.time()
         while True:
-            AutoReadPlugin.next_step()
-            time.sleep(interval)
-            if (
-                time.time() - start_time
-                > AutoReadPlugin.config["config"]["max_runtime"]
-            ):
-                print("达到最大运行时间，停止插件")
+            if time.time() - start_time > self.config["config"]["max_runtime"]:
+                self.logger.info("达到最大运行时间, 插件停止运行")
                 break
+            self.next_step()
+            time.sleep(interval)
 
 
 if __name__ == "__main__":
-    AutoReadPlugin.run()
+    import time
+    import logging
+    from src.utils import Logger
+
+    logger = Logger.get_logger("AutoReadPlugin", level=logging.DEBUG)
+
+    time.sleep(3)
+    try:
+        read_handler = AutoReadPlugin(logger=logger)
+        read_handler.run()
+    except KeyboardInterrupt:
+        logger.info("插件已被用户中断")
