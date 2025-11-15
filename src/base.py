@@ -62,7 +62,7 @@ class PluginBase(ABC):
             tabulate(
                 processed_data,
                 headers=processed_headers,
-                maxcolwidths=[None, None, None, 50],
+                maxcolwidths=[None, None, None, 80],
                 tablefmt=tablefmt,
             )
         )

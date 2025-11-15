@@ -44,7 +44,7 @@ def main():
 
     i = int(input("输入一个将要运行的插件的index: "))
     classes = PluginBase.index_plugins(plugins)
-    # alert("你可以将浏览器窗口切至前台, 然后点击确定")
+    alert("你可以将浏览器窗口切至前台, 然后点击确定")
     run_plugin(classes[i - 1])
 
 

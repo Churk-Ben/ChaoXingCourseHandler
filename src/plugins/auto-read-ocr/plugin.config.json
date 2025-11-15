@@ -1,0 +1,12 @@
+{
+    "name": "Auto Read OCR",
+    "version": "2.0.2",
+    "description": "基于OCR识别的自动阅读插件. (author@Churk lisence@MIT) 基于OCR可以做到更强的泛用性, 但是性能需求更大",
+    "classname": "AutoReadOCR",
+    "config": {
+        "check_interval": 1,
+        "scroll_amount": -200,
+        "max_runtime": 9000,
+        "threshold": 0.6
+    }
+}

@@ -1,13 +1,17 @@
 {
     "name": "Auto Read",
-    "version": "2.0.0",
-    "description": "基于OCR识别的自动阅读插件. (author@Churk lisence@MIT) ",
-    "classname": "AutoReadPlugin",
+    "version": "1.2.5",
+    "description": "基于OpenCV模式识别的自动阅读插件. (author@Churk lisence@MIT) 基于OpenCV可以做到更迅速的响应, 但是需要自行配置模板图片",
+    "classname": "AutoReadOpenCV",
     "config": {
-        "check_interval": 5,
+        "check_interval": 20,
         "scroll_amount": -500,
         "max_runtime": 9000,
-        "threshold": 0.6
+        "threshold": 0.8
     },
-    "templates": {}
+    "templates": {
+        "next_btn": "templates/next_btn.png",
+        "prev_btn": "templates/prev_btn.png",
+        "more_btn": "templates/more_btn.png"
+    }
 }
