@@ -16,17 +16,6 @@ from src.Manager import Manager
 from src.Base import PluginBase
 
 
-def run_plugin(plugin: PluginBase):
-    manager = Manager()
-
-    try:
-        manager.activate_plugin(plugin)
-    except KeyboardInterrupt:
-        manager.logger.info("运行已中断")
-    except Exception as e:
-        manager.logger.error(f"插件运行时出错: {e}")
-
-
 def main():
     manager = Manager()
     plugins = manager.load_plugins()
@@ -45,7 +34,7 @@ def main():
     i = int(input("输入一个将要运行的插件的index: "))
     classes = PluginBase.index_plugins(plugins)
     alert("你可以将浏览器窗口切至前台, 然后点击确定")
-    run_plugin(classes[i - 1])
+    manager.activate_plugin(classes[i - 1])
 
 
 if __name__ == "__main__":

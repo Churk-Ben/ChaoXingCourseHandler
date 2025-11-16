@@ -71,6 +71,12 @@ class Manager:
         return plugins
 
     def activate_plugin(self, plugin: PluginBase):
-        plugin_logger = Logger.get_logger(plugin.__name__)
-        plugin_instance = plugin(logger=plugin_logger)
-        plugin_instance.run()
+        try:
+            plugin_logger = Logger.get_logger(plugin.__name__)
+            plugin_instance = plugin(logger=plugin_logger)
+            plugin_instance.run()
+
+        except KeyboardInterrupt:
+            self.logger.info("运行已中断")
+        except Exception as e:
+            self.logger.error(f"插件运行时出错: {e}")
