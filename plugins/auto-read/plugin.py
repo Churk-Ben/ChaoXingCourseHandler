@@ -1,10 +1,9 @@
 import os
 import sys
-import time
 
 
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", "..", ".."))
+PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, "..", ".."))
 SRC_DIR = os.path.join(PROJECT_ROOT, "src")
 
 if PROJECT_ROOT not in sys.path:
@@ -19,7 +18,7 @@ from src.utils import Image
 CONFIG = os.path.join(THIS_DIR, "plugin.config.json")
 
 
-class AutoReadOCR(PluginBase):
+class AutoReadOpenCV(PluginBase):
     """
     自动阅读插件
     """
@@ -44,27 +43,57 @@ class AutoReadOCR(PluginBase):
             self.logger.info(f"插件版本: {self.config['version']} ")
             self.logger.info(f"插件描述: {self.config['description']} ")
 
-    def find_text_on_screen(self, template: str, threshold=None):
+    def load_grayscaled_template(self, img_path):
+        img = Image.UnitImage.from_path(img_path)
+        gray_img = img.to_grayscale()
+        self.logger.debug(f"加载并转换模板图像: {img_path}")
+        return gray_img
+
+    def capture_grayscaled_screen(self):
         import pyautogui as pag
 
+        screenshot = pag.screenshot()
+        img = Image.UnitImage.from_pil(screenshot)
+        gray_img = img.to_grayscale()
+        self.logger.debug("捕获并转换屏幕截图为灰度图像")
+        return gray_img
+
+    def find_template_on_screen(self, template: Image.UnitImage, threshold=None):
         if threshold is None:
             threshold = self.config["config"]["threshold"]
-        screen = Image.UnitImage.from_pil(pag.screenshot())
-        start_time = time.time()
-        point = Image.ImageProccecor.match_text(
+        screen = self.capture_grayscaled_screen()
+        point = Image.ImageProccecor.match_img(
             screen, template, threshold=threshold, top_n=1
         )
-        delta_time = time.time() - start_time
-        self.logger.debug(
-            f"在屏幕上查找模板文本 {template} , 阈值: {threshold}, 结果: {point}, 用时 {delta_time}"
-        )
+        self.logger.debug(f"在屏幕上查找模板, 阈值: {threshold}, 结果: {point}")
         return point
 
     def next_step(self):
         import pyautogui as pag
 
-        next_point = self.find_text_on_screen("下一页")
-        if next_point:
+        prev_btn_img = self.load_grayscaled_template(
+            os.path.join(THIS_DIR, self.config["templates"]["prev_btn"])
+        )
+        next_btn_img = self.load_grayscaled_template(
+            os.path.join(THIS_DIR, self.config["templates"]["next_btn"])
+        )
+        more_btn_img = self.load_grayscaled_template(
+            os.path.join(THIS_DIR, self.config["templates"]["more_btn"])
+        )
+
+        prev_point = self.find_template_on_screen(prev_btn_img)
+        next_point = self.find_template_on_screen(next_btn_img)
+        more_point = self.find_template_on_screen(more_btn_img)
+
+        if more_point:
+            pag.click(
+                more_point[0],
+                more_point[1],
+            )
+            self.logger.info('点击了"加载更多"按钮')
+            return True
+
+        elif next_point:
             pag.click(
                 next_point[0],
                 next_point[1],
@@ -72,22 +101,12 @@ class AutoReadOCR(PluginBase):
             self.logger.info('点击了"下一页"按钮')
             return True
 
-        prev_point = self.find_text_on_screen("上一页")
-        if prev_point:
+        elif prev_point:
             pag.click(
                 prev_point[0],
                 prev_point[1],
             )
             self.logger.info('点击了"上一页"按钮')
-            return True
-
-        more_point = self.find_text_on_screen("加载更多")
-        if more_point:
-            pag.click(
-                more_point[0],
-                more_point[1],
-            )
-            self.logger.info('点击了"加载更多"按钮')
             return True
 
         else:
@@ -112,6 +131,14 @@ if __name__ == "__main__":
     import logging
     from src.utils import Logger
 
-    plugin_logger = Logger.get_logger(AutoReadOCR.__name__, level=logging.DEBUG)
-    plugin_instance = AutoReadOCR(logger=plugin_logger)
-    plugin_instance.run()
+    main_logger = Logger.get_logger("PluginManager", level=logging.DEBUG)
+
+    def activate_plugin(plugin: PluginBase):
+        plugin_logger = Logger.get_logger(plugin.__name__, level=logging.DEBUG)
+        plugin_instance = plugin(logger=plugin_logger)
+        plugin_instance.run()
+
+    try:
+        activate_plugin(AutoReadOpenCV)
+    except KeyboardInterrupt:
+        main_logger.info("插件已被用户中断")

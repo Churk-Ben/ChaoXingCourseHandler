@@ -6,7 +6,7 @@ from src.Base import PluginBase
 from src.utils import Logger
 
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
-PLUGINS = os.path.join(THIS_DIR, "plugins")
+PLUGINS = os.path.join(THIS_DIR, "..", "plugins")
 
 
 class Manager:
