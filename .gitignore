@@ -115,4 +115,5 @@ Thumbs.db
 .vscode/
 .trae/
 
-logs/
+logs/*
+!logs
